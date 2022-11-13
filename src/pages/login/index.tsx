@@ -1,6 +1,6 @@
 import { LockOutlined } from "@ant-design/icons";
 import { Button, Form, Input } from "antd";
-import "./login.css";
+import "./style.css";
 interface FormValues {
   password: string;
 }
