@@ -1,8 +1,8 @@
-import { Button } from "antd";
+import { Button, message } from "antd";
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import ReactEcharts from "echarts-for-react";
-import axios from "axios";
+import request from "../../request";
 import monent from "moment";
 import "./style.css";
 interface CourseItem {
@@ -15,26 +15,28 @@ interface Data {
 interface LineData {
   name: string;
   type: any;
-  data:number[]
+  data: number[];
 }
 const Home: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [data, setData] = useState<Data>({});
   const handleLogoutClick = () => {
-    axios.get("/api/logout").then((res) => {
-      if (res.data?.data) {
+    request.get("/api/logout").then((res) => {
+      const data: boolean = res.data;
+      if (data) {
         setIsLogin(false);
-        console.log("退出成功");
       } else {
-        console.log("退出失败");
+        message.error("退出失败");
       }
     });
   };
   const handleCrawllerClick = () => {
-    axios.get("/api/getData").then((res) => {
-      if (res.data?.data) {
+    request.get("/api/getData").then((res) => {
+      const data: boolean = res.data;
+      if (data) {
+        message.success("爬取成功");
       } else {
-        console.log("退出失败");
+        message.error("爬取失败");
       }
     });
   };
@@ -46,7 +48,7 @@ const Home: React.FC = () => {
       const item = data[i];
       times.push(monent(Number(i)).format("MM-DD HH:mm"));
       item.forEach((innerItem) => {
-        const {title,count}=innerItem
+        const { title, count } = innerItem;
         // 没有这个title
         if (courseNames.indexOf(title) === -1) {
           courseNames.push(title);
@@ -56,14 +58,14 @@ const Home: React.FC = () => {
           : (tempData[title] = [count]);
       });
     }
-    const result:LineData[] = []
-      for (let i in tempData) {
-          result.push({
-              name: i,
-              type: "line",
-              data:tempData[i]
-          })
-      }
+    const result: LineData[] = [];
+    for (let i in tempData) {
+      result.push({
+        name: i,
+        type: "line",
+        data: tempData[i],
+      });
+    }
     return {
       title: {
         text: "课程在线学习人数",
@@ -83,31 +85,29 @@ const Home: React.FC = () => {
       xAxis: {
         type: "category",
         boundaryGap: false,
-        data: times
+        data: times,
       },
       yAxis: {
         type: "value",
       },
-      series: result
+      series: result,
     };
   };
   useEffect(() => {
-    axios.get("/api/isLogin").then((res) => {
-      if (res.data?.data) {
+    request.get("/api/isLogin").then((res) => {
+      const data: boolean = res.data;
+      if (data) {
         setIsLogin(true);
-        console.log("已经登录");
       } else {
         setIsLogin(false);
-        console.log("未登录");
       }
     });
-    axios.get("/api/showData").then((res) => {
-      if (res.data?.data) {
-        setData(res.data.data);
-        console.log("已经登录");
+    request.get("/api/showData").then((res) => {
+      const data: Data = res.data;
+      if (data) {
+        setData(data);
       } else {
         setIsLogin(false);
-        console.log("未登录");
       }
     });
   }, []);
