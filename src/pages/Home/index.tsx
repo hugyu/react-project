@@ -3,9 +3,23 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import ReactEcharts from "echarts-for-react";
 import axios from "axios";
+import monent from "moment";
 import "./style.css";
+interface CourseItem {
+  title: string;
+  count: number;
+}
+interface Data {
+  [key: string]: CourseItem[];
+}
+interface LineData {
+  name: string;
+  type: any;
+  data:number[]
+}
 const Home: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [data, setData] = useState<Data>({});
   const handleLogoutClick = () => {
     axios.get("/api/logout").then((res) => {
       if (res.data?.data) {
@@ -25,15 +39,40 @@ const Home: React.FC = () => {
     });
   };
   const getOption: () => echarts.EChartsOption = () => {
+    const courseNames: string[] = [];
+    const times: string[] = [];
+    const tempData: { [key: string]: number[] } = {};
+    for (let i in data) {
+      const item = data[i];
+      times.push(monent(Number(i)).format("MM-DD HH:mm"));
+      item.forEach((innerItem) => {
+        const {title,count}=innerItem
+        // 没有这个title
+        if (courseNames.indexOf(title) === -1) {
+          courseNames.push(title);
+        }
+        tempData[title]
+          ? tempData[title].push(count)
+          : (tempData[title] = [count]);
+      });
+    }
+    const result:LineData[] = []
+      for (let i in tempData) {
+          result.push({
+              name: i,
+              type: "line",
+              data:tempData[i]
+          })
+      }
     return {
       title: {
-        text: "Stacked Line",
+        text: "课程在线学习人数",
       },
       tooltip: {
         trigger: "axis",
       },
       legend: {
-        data: ["Email", "Union Ads", "Video Ads", "Direct", "Search Engine"],
+        data: courseNames,
       },
       grid: {
         left: "3%",
@@ -41,57 +80,30 @@ const Home: React.FC = () => {
         bottom: "3%",
         containLabel: true,
       },
-      toolbox: {
-        feature: {
-          saveAsImage: {},
-        },
-      },
       xAxis: {
         type: "category",
         boundaryGap: false,
-        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        data: times
       },
       yAxis: {
         type: "value",
       },
-      series: [
-        {
-          name: "Email",
-          type: "line",
-          stack: "Total",
-          data: [120, 132, 101, 134, 90, 230, 210],
-        },
-        {
-          name: "Union Ads",
-          type: "line",
-          stack: "Total",
-          data: [220, 182, 191, 234, 290, 330, 310],
-        },
-        {
-          name: "Video Ads",
-          type: "line",
-          stack: "Total",
-          data: [150, 232, 201, 154, 190, 330, 410],
-        },
-        {
-          name: "Direct",
-          type: "line",
-          stack: "Total",
-          data: [320, 332, 301, 334, 390, 330, 320],
-        },
-        {
-          name: "Search Engine",
-          type: "line",
-          stack: "Total",
-          data: [820, 932, 901, 934, 1290, 1330, 1320],
-        },
-      ],
+      series: result
     };
   };
   useEffect(() => {
     axios.get("/api/isLogin").then((res) => {
       if (res.data?.data) {
         setIsLogin(true);
+        console.log("已经登录");
+      } else {
+        setIsLogin(false);
+        console.log("未登录");
+      }
+    });
+    axios.get("/api/showData").then((res) => {
+      if (res.data?.data) {
+        setData(res.data.data);
         console.log("已经登录");
       } else {
         setIsLogin(false);
