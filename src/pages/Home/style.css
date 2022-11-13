@@ -1,10 +1,11 @@
 .home-page {
+   padding: 0 50px;
+}
+.home-page .buttons {
     width: 400px;
+    margin:30px auto;
     padding: 20px;
-    margin:100px auto;
-    border:1px solid #ccc;
-    border-radius: 5px;
 }
 .home-page .ant-btn {
-    margin-right: 20px;
+    margin-right: 10px;
 }
